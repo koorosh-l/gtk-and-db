@@ -1,0 +1,3 @@
+* bookstore
+management program for a bookstore using sqlite3, Gtk and guile-gi
+

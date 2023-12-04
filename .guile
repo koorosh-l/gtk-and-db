@@ -1,0 +1,4 @@
+((@ (ice-9 history)
+		    disable-value-history!))
+((@ (system repl common) repl-default-option-set!)
+		  'on-error 'report)
