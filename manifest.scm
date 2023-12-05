@@ -351,4 +351,6 @@ ranging from small one-off tools to complete application suites.")
     (license license:lgpl2.1+))
   )
 
-(packages->manifest `(,glib-edge ,gobject-introspection-edge ,mygtk ,coreutils ,bash ,guile-3.0 ,guile-gi ,grep ,binutils))
+(packages->manifest `(,glib-edge ,gobject-introspection-edge ,mygtk ,
+				 coreutils ,bash ,guile-3.0 ,guile-gi
+				 ,grep ,binutils ,guile-sqlite3))
