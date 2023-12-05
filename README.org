@@ -1,3 +1,9 @@
 * bookstore
 management program for a bookstore using sqlite3, Gtk and guile-gi
 
+* bugs
+for some reason calling gtk imported fucntions in the server fails with a byebye
+
+* tbi
+remove the use of an xml file for ui description and go all strings 
+use some quasiqoutes to remove duplicate code and definitions 

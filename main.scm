@@ -3,11 +3,22 @@
 exec guile -e main -s "$0" "$@"
 !#
 
-(use-modules (gi)
-	     (gi repository)
-	     (sxml simple)
-;;	     (sqlite3)
-	     )
+(use-modules (gi) (gi repository)
+	     (sxml simple) (sqlite3)
+	     (ice-9 pretty-print))
+
+(require "Gio" "2.0")
+(require "Gtk" "4.0")
+(load-by-name "Gio" "Application")
+(load-by-name "Gtk" "Application")
+(load-by-name "Gtk" "ApplicationWindow")
+(load-by-name "Gtk" "Builder")
+(load-by-name "Gtk" "Window")
+(load-by-name "Gtk" "Widget")
+(load-by-name "Gtk" "Button")
+(load-by-name "Gtk" "Stack")
+(load-by-name "Gtk" "StackSwitcher")
+
 (define control-box
   `(object (@ (class "GtkGrid"))
 	   (child (object (@ (class "GtkButton"))
@@ -35,7 +46,7 @@ exec guile -e main -s "$0" "$@"
 	      (property (@ (name "orientation")) "GTK_ORIENTATION_VERTICAL")
 	      (child (object (@ (class "GtkStackSwitcher") (id "switchero"))))
 	      (child
-	       (object (@ (class "GtkStack"))
+	       (object (@ (class "GtkStack") (id "stacked"))
 		       (child (object (@ (class "GtkStackPage") (id "books"))
 				(property (@ (name "name")) "books")
 				(property (@ (name "title")) "Books")
@@ -69,44 +80,33 @@ exec guile -e main -s "$0" "$@"
       (newline p))))
 (gen-ui-file "./bs-ui.xml" ui)
 (define cmd (command-line))
-(require "Gio" "2.0")
-(require "Gtk" "4.0")
-(load-by-name "Gio" "Application")
-(load-by-name "Gtk" "Application")
-(load-by-name "Gtk" "ApplicationWindow")
-(load-by-name "Gtk" "ResponseType")
-(load-by-name "Gtk" "Builder")
+;; (define (show-welcome app)
+;;   (let* ([welcome-window (make <GtkWindow> #:application app #:title "DB Browser" #:default-height 50 #:default-width 50 #:decorated #f)]
+;; 	 [box (make <GtkCenterBox>)]
+;; 	 [open-button (make <GtkButton> #:label "Open DB File")]
+;; 	 [select-button (make <GtkButton> #:label "select")]
+;; 	 [file-ch   (make <GtkFileChooserDialog> #:parent welcome-window #:title "select db file")])
+;;     (connect open-button clicked (lambda _
+;; 				   (show file-ch)))
+;;     (center-box:set-center-widget box open-button)
+;;     (window:set-child welcome-window box)
+;;     (show welcome-window)))
 
-(load-by-name "Gtk" "Window")
-(load-by-name "Gtk" "Widget")
-(load-by-name "Gtk" "CenterBox")
-(load-by-name "Gtk" "Grid")
-(load-by-name "Gtk" "Fixed")
-(load-by-name "Gtk" "FileDialog")
-(load-by-name "Gtk" "FileChooserDialog")
+(define (gtk-main app)
+  (let* ([builded     (builder:new-from-file "./bs-ui.xml")]
+	 [main-window (builder:get-object builded "main-window")]
+	 [bs-stack    (builder:get-object builded "stacked")]
+	 [bs-switcher (builder:get-object builded "switchero")]
+	 [bs-books-page    (builder:get-object builded "books")]
+	 [bs-customer-page (builder:get-object builded "customers")]
+	 [bs-sales-page    (builder:get-object builded "sales")]
+	 [bs-history-page  (builder:get-object builded "history")])
+    (stack-switcher:set-stack bs-switcher bs-stack)
+    (window:set-application main-window app)
 
-(load-by-name "Gtk" "Button")
-(load-by-name "Gtk" "DropDown")
-(load-by-name "Gtk" "DropDown")
-(load-by-name "Gtk" "Align")
-(load-by-name "Gtk" "Orientable")
-(load-by-name "Gtk" "Orientation")
-
-(define (show-welcome app)
-  (let* ([welcome-window (make <GtkWindow> #:application app #:title "DB Browser" #:default-height 50 #:default-width 50 #:decorated #f)]
-	 [box (make <GtkCenterBox>)]
-	 [open-button (make <GtkButton> #:label "Open DB File")]
-	 [select-button (make <GtkButton> #:label "select")]
-	 [file-ch   (make <GtkFileChooserDialog> #:parent welcome-window #:title "select db file")])
-    (connect open-button clicked (lambda _
-				   (show file-ch)))
-    (center-box:set-center-widget box open-button)
-    (window:set-child welcome-window box)
-    (show welcome-window)))
-
-
+    (show main-window)))
 (define (activate-call-back app)
-  (show-welcome app)) 
+  (gtk-main app)) 
 
 (define (main cmd)
   (let ([app (make <GtkApplication> #:application-id "xyz.quasikote.www")])
