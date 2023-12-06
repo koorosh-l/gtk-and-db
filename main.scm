@@ -21,18 +21,80 @@ exec guile -e main -s "$0" "$@"
 
 (define control-box
   `(object (@ (class "GtkGrid"))
-	   (child (object (@ (class "GtkButton"))
-			  (property (@ (name "label"))
-				    "Add")))
-	   (child (object (@ (class "GtkButton"))
-			  (poreperty (@ (name "label"))
-				     "Remove")))
-	   (child (object (@ (class "GtkButton"))
-			  (poreperty (@ (name "label" ))
-				     "Edit")))
-	   (child (object (@ (class "GtkButton"))
-			  (poreperty (@ (name "label"))
-				     "Complete")))))
+	   (child (object (@ (class "GtkButton")  (id "add"))
+			  (property (@ (name "label")) "Add")
+			  (layout
+			   (property (@ (name "columns")) 0)
+			   (property (@ (name "row"))     0))))
+	   
+	   (child (object (@ (class "GtkButton")  (id "edit"))
+			  (property (@ (name "label")) "Edit")
+			  (layout
+			   (property (@ (name "columns")) 1)
+			   (property (@ (name "row"))     0))))
+	   
+	   (child (object (@ (class "GtkButton")  (id "remove"))
+			  (property (@ (name "label")) "Remove")
+			  (layout
+			   (property (@ (name "columns")) 2)
+			   (property (@ (name "row"))     0))))
+	   
+	   (child (object (@ (class "GtkButton")  (id "complete"))
+			  (property (@ (name "label")) "Complete")
+			  (layout
+			   (property (@ (name "columns")) 3)
+			   (property (@ (name "row"))     0))))))
+(define (gen-control-box prefix)
+  `(object (@ (class "GtkFrame"))
+	   (child
+	    (object (@ (class "GtkGrid"))
+		    (property (@ (name "row-spacing")) 4)
+		    (property (@ (name "column-spacing")) 4)
+		    (child (object (@ (class "GtkButton")  (id ,(string-append prefix "add")))
+				   (property (@ (name "label")) "Add")
+				   (layout
+				    (property (@ (name "column")) 0)
+				    (property (@ (name "row"))    0))))
+		    
+		    (child (object (@ (class "GtkButton")  (id ,(string-append prefix "remove")))
+				   (property (@ (name "label")) "Remove")
+				   (layout
+				    (property (@ (name "column")) 1)
+				    (property (@ (name "row"))    0))))
+
+		    (child (object (@ (class "GtkButton")  (id ,(string-append prefix "edit")))
+				   (property (@ (name "label")) "Edit")
+				   (layout
+				    (property (@ (name "column")) 0)
+				    (property (@ (name "row"))    1))))
+		    
+		    (child (object (@ (class "GtkButton")  (id ,(string-append prefix "complete")))
+				   (property (@ (name "label")) "Complete")
+				   (layout
+				    (property (@ (name "column")) 1)
+				    (property (@ (name "row"))    1))))))))
+
+(define (make-page)
+  `(object (@ (class "GtkBox"))
+	   (property (@ (name "orientation")) "GTK_ORIENTATION_HORIZANTAL")
+	   (child ,(gen-control-box "test-"))
+	   (child (object (@ (class "GtkFrame"))
+			  (child (object (@ (class "GtkGridView"))))))))
+
+
+(define (make-tab name title id child)
+  (when (symbol? name)  (set! name  (symbol->string name)))
+  (when (symbol? id)    (set! id    (symbol->string id)))
+  (when (symbol? title) (set! title (symbol->string title)))
+  (when (symbol? child) (set! child (symbol->string child)))
+  `(object (@ (class "GtkStackPage") (id ,id))
+	   (property (@ (name "name")) ,name)
+	   (property (@ (name "title")) ,title)
+	   (property (@ (name "child"))
+		     ,child)))
+(define dummy `(object (@ (class "GtkLabel"))
+		       (property (@ (name "label")) "dummy widget")))
+
 (define ui
   `(interface
     (@ (domain "xyz.quasikote"))
@@ -47,30 +109,11 @@ exec guile -e main -s "$0" "$@"
 	      (child (object (@ (class "GtkStackSwitcher") (id "switchero"))))
 	      (child
 	       (object (@ (class "GtkStack") (id "stacked"))
-		       (child (object (@ (class "GtkStackPage") (id "books"))
-				(property (@ (name "name")) "books")
-				(property (@ (name "title")) "Books")
-				(property (@ (name "child"))
-					  (object (@ (class "GtkLabel"))
-						  (property (@ (name "label")) "books perhaps")))))
-		       (child (object (@ (class "GtkStackPage") (id "customers"))
-				(property (@ (name "name")) "customers")
-				(property (@ (name "title")) "Customers")
-				(property (@ (name "child"))
-					  (object (@ (class "GtkLabel"))
-						  (property (@ (name "label")) "some customers plz")))))
-		       (child (object (@ (class "GtkStackPage") (id "sales"))
-				(property (@ (name "name")) "sales")
-				(property (@ (name "title")) "Sell")
-				(property (@ (name "child"))
-					  (object (@ (class "GtkLabel"))
-						  (property (@ (name "label")) "buy high sell low")))))
-		       (child (object (@ (class "GtkStackPage") (id "history"))
-				(property (@ (name "name")) "history")
-				(property (@ (name "title")) "History")
-				(property (@ (name "child"))
-					  (object (@ (class "GtkLabel"))
-						  (property (@ (name "label")) "what happend duno"))))))))))))
+		       (child ,(make-tab `books1     `Books1     `books1     (make-page)))
+		       (child ,(make-tab `books     `Books     `books     (gen-control-box "books-")))
+		       (child ,(make-tab `customers `Customers `customers (gen-control-box "customers-")))
+		       (child ,(make-tab `sell      `Sell      `sell      (gen-control-box "sell-")))
+		       (child ,(make-tab `history   `History   `history   (gen-control-box "history-"))))))))))
 
 (define (gen-ui-file file-name sxml)
   (call-with-output-file file-name
@@ -79,18 +122,6 @@ exec guile -e main -s "$0" "$@"
       (sxml->xml sxml p)
       (newline p))))
 (gen-ui-file "./bs-ui.xml" ui)
-(define cmd (command-line))
-;; (define (show-welcome app)
-;;   (let* ([welcome-window (make <GtkWindow> #:application app #:title "DB Browser" #:default-height 50 #:default-width 50 #:decorated #f)]
-;; 	 [box (make <GtkCenterBox>)]
-;; 	 [open-button (make <GtkButton> #:label "Open DB File")]
-;; 	 [select-button (make <GtkButton> #:label "select")]
-;; 	 [file-ch   (make <GtkFileChooserDialog> #:parent welcome-window #:title "select db file")])
-;;     (connect open-button clicked (lambda _
-;; 				   (show file-ch)))
-;;     (center-box:set-center-widget box open-button)
-;;     (window:set-child welcome-window box)
-;;     (show welcome-window)))
 
 (define (gtk-main app)
   (let* ([builded     (builder:new-from-file "./bs-ui.xml")]
@@ -111,6 +142,6 @@ exec guile -e main -s "$0" "$@"
 (define (main cmd)
   (let ([app (make <GtkApplication> #:application-id "xyz.quasikote.www")])
     (connect app activate activate-call-back)
-    (run app cmd)))
-(exit (main cmd))
+    (run app )))
+(exit (main (command-line)))
 
