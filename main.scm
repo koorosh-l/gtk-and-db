@@ -19,18 +19,15 @@ exec guile -e main -s "$0" "$@"
 (load-by-name "Gtk" "Stack")
 (load-by-name "Gtk" "StackSwitcher")
 
-
-(define input-desc `(("dev"       . ("name"        "last-name"   "date of birth" "id"))
+(define input-desc `(("dev"       . ("name"        "last-name"   "date-of-birth" "id"))
 		     ("books"     . ("ISBN"        "titl"        "writer"      "publisher"    "price"))
 		     ("customers" . ("customer-ID" "name"        "surname"     "phone-number" "dob"))
 		     ("sales"     . ("recipt-id"   "customer-id" "books"       "total-price"  "date"))
 		     ("history"   . ("recipt-id"   "month"       "year"        "max-records"  "all?"))))
 
-(define dummy `(object (@ (class "GtkLabel"))
-		       (property (@ (name "label")) "dummy widget")))
-(define (gen-entry label id pos)
+(define (gen-entry label id)
   `(object (@ (class "GtkEntry") (id ,id))
-	   (property (@ (name "placeholder-text")) ,label)))
+	   (property (@ (name "placeholder-text")) ,id)))
 
 (define (gen-control-box prefix)
   `(object (@ (class "GtkFrame"))
@@ -38,22 +35,22 @@ exec guile -e main -s "$0" "$@"
 	    (object (@ (class "GtkGrid"))
 		    (property (@ (name "row-spacing")) 4)
 		    (property (@ (name "column-spacing")) 4)
-		    (child (object (@ (class "GtkButton") (id ,(string-append prefix "add")))
+		    (child (object (@ (class "GtkButton") (id ,(string-append prefix "-" "add")))
 				   (property (@ (name "label")) "Add")
 				   (layout
 				    (property (@ (name "column")) 0)
 				    (property (@ (name "row"))    0))))
-		    (child (object (@ (class "GtkButton") (id ,(string-append prefix "remove")))
+		    (child (object (@ (class "GtkButton") (id ,(string-append prefix "-" "remove")))
 				   (property (@ (name "label")) "Remove")
 				   (layout
 				    (property (@ (name "column")) 1)
 				    (property (@ (name "row"))    0))))
-		    (child (object (@ (class "GtkButton") (id ,(string-append prefix "edit")))
+		    (child (object (@ (class "GtkButton") (id ,(string-append prefix "-" "edit")))
 				   (property (@ (name "label")) "Edit")
 				   (layout
 				    (property (@ (name "column")) 0)
 				    (property (@ (name "row"))    1))))
-		    (child (object (@ (class "GtkButton") (id ,(string-append prefix "complete")))
+		    (child (object (@ (class "GtkButton") (id ,(string-append prefix "-" "compelet")))
 				   (property (@ (name "label")) "Complete")
 				   (layout
 				    (property (@ (name "column")) 1)
@@ -67,21 +64,21 @@ exec guile -e main -s "$0" "$@"
 	    ,(append `(object (@ (class "GtkBox"))
 			      (property (@ (name "orientation")) "GTK_ORIENTATION_VERTICAL"))
 		     (map (lambda (label)
-			    `(child ,(gen-entry label (string-append prefix label "entry") 0)))
+			    `(child ,(gen-entry label (string-append prefix label "-" "entry"))))
 			  entries)))))
 (define (gen-left prefix entries)
   `(object (@ (class "GtkBox"))
 	   (property (@ (name "orientation")) "GTK_ORIENTATION_VERTICAL")
 	   (child ,(gen-input-frame  prefix entries))
 	   (child ,(gen-control-box  prefix))))
-(define (gen-grid-view   id)
-  `(object (@ (class "GtkListView") (id ,id))
-	   (property (@ (name "hexpand")) "TRUE")
-	   (property (@ (name "vexpand")) "TRUE")))
+;; (define (gen-grid-view   id)
+;;   `(object (@ (class "GtkListView") (id ,id))
+;; 	   (property (@ (name "hexpand")) "TRUE")
+;; 	   (property (@ (name "vexpand")) "TRUE")))
 (define (gen-right prefix)
   `(object (@ (class "GtkFrame"))
 	   (child (@ (type "end"))
-		  (object (@ (class "GtkGridView") (id ,(string-append prefix "grid-view")))))
+		  (object (@ (class "GtkGridView") (id ,(string-append prefix "-" "grid-view")))))
 	   (property (@ (name "hexpand")) "TRUE")
 	   (property (@ (name "vexpand")) "TRUE")
 	   (property (@ (name "valign"))  "0")
@@ -93,7 +90,7 @@ exec guile -e main -s "$0" "$@"
 		  ,(gen-left prefix (assoc-ref input-desc prefix)))
 	   (child (@ (type "end"))
 		  ,(gen-right prefix))))
-(define (make-tab title id child)
+(define (make-tab  title id child)
   `(object (@ (class "GtkStackPage") (id ,id))
 	   (property (@ (name "name"))  ,title)
 	   (property (@ (name "title")) ,title)
@@ -128,17 +125,21 @@ exec guile -e main -s "$0" "$@"
 	 [main-window (builder:get-object builded "main-window")]
 	 [bs-stack    (builder:get-object builded "stacked")]
 	 [bs-switcher (builder:get-object builded "switchero")]
-	 [bs-books-page    (builder:get-object builded "books")]
-	 [bs-customer-page (builder:get-object builded "customers")]
-	 [bs-sales-page    (builder:get-object builded "sales")]
-	 [bs-history-page  (builder:get-object builded "history")])
+	 [inputs  (map (lambda (i)
+			 (map (lambda (j)
+				(define id (string-append (car i) "-" j "-" "entry"))
+				(cons id (builder:get-object builded id)))
+			      (assoc-ref input-desc (car i))))
+		       input-desc)]
+	 [controls 1]
+	 [grid-views (map (lambda (elm) (builder:get-object builded (string-append (car elm) "grid-view")))
+			  input-desc)])
+    (pretty-print inputs)
     (stack-switcher:set-stack bs-switcher bs-stack)
     (window:set-application main-window app)
-
     (show main-window)))
 (define (activate-call-back app)
   (gtk-main app)) 
-
 (define (main cmd)
   (let ([app (make <GtkApplication> #:application-id "xyz.quasikote.www")])
     (connect app activate activate-call-back)
