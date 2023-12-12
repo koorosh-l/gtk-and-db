@@ -19,11 +19,10 @@ exec guile -e main -s "$0" "$@"
 (load-by-name "Gtk" "Stack")
 (load-by-name "Gtk" "StackSwitcher")
 
-(define input-desc `(("dev"       . ("name"        "last-name"   "date-of-birth" "id"))
-		     ("books"     . ("ISBN"        "titl"        "writer"      "publisher"    "price"))
-		     ("customers" . ("customer-ID" "name"        "surname"     "phone-number" "dob"))
-		     ("sales"     . ("recipt-id"   "customer-id" "books"       "total-price"  "date"))
-		     ("history"   . ("recipt-id"   "month"       "year"        "max-records"  "all?"))))
+(define input-desc `(("books"		.("ISBN"        "title"       "writer"      "publisher"    "price"))
+		     ("customers"	.("customer-ID" "name"        "surname"     "phone-number" "dob"))
+		     ("sales"		.("recipt-id"   "customer-id" "books"       "total-price"  "date"))
+		     ("history"		.("recipt-id"   "month"       "year"        "max-records"  "all?"))))
 
 (define (gen-entry label id)
   `(object (@ (class "GtkEntry") (id ,id))
@@ -64,7 +63,7 @@ exec guile -e main -s "$0" "$@"
 	    ,(append `(object (@ (class "GtkBox"))
 			      (property (@ (name "orientation")) "GTK_ORIENTATION_VERTICAL"))
 		     (map (lambda (label)
-			    `(child ,(gen-entry label (string-append prefix label "-" "entry"))))
+			    `(child ,(gen-entry label (string-append prefix "-" label "-" "entry"))));;k;;;k;
 			  entries)))))
 (define (gen-left prefix entries)
   `(object (@ (class "GtkBox"))
@@ -132,7 +131,7 @@ exec guile -e main -s "$0" "$@"
 			      (assoc-ref input-desc (car i))))
 		       input-desc)]
 	 [controls 1]
-	 [grid-views (map (lambda (elm) (builder:get-object builded (string-append (car elm) "grid-view")))
+	 [grid-views (map (lambda (elm) (builder:get-object builded (string-append (car elm) "-" "grid-view")))
 			  input-desc)])
     (pretty-print inputs)
     (stack-switcher:set-stack bs-switcher bs-stack)
