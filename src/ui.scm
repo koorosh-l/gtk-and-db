@@ -1,5 +1,6 @@
 (define-module (ui)
-  #:export (input-desc ui))
+  #:use-module (sxml simple)
+  #:export (input-desc ui ui-xml-str))
 
 (define input-desc `(("books"		.("ISBN"        "title"       "writer"      "publisher"    "price"))
 		     ("customers"	.("customer-ID" "name"        "surname"     "phone-number" "dob"))
@@ -91,3 +92,7 @@
 	      (child ,(append
 		       `(object (@ (class "GtkStack") (id "stacked")))
 		       (map (lambda (i) `(child ,(make-tab (string-capitalize (car i)) (car i) (make-page (car i))))) input-desc))))))))
+(define ui-xml-str
+  (call-with-output-string
+    (lambda (p)
+      (sxml->xml ui p))))
