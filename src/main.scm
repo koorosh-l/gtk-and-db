@@ -6,7 +6,8 @@ exec guile -e main -s "$0" "$@"
 (add-to-load-path (getenv "PWD"))
 (use-modules (ui) (db-ops)
 	     (gi) (gi repository) (sqlite3)
-	     (sxml simple) (ice-9 pretty-print))
+	     (sxml simple) (ice-9 pretty-print)
+	     (ice-9 match))
 (require "Gio" "2.0")
 (require "Gtk" "4.0")
 (load-by-name "Gio" "Application")
@@ -23,10 +24,21 @@ exec guile -e main -s "$0" "$@"
 
 (define (get-control builded name-space op)
   (builder:get-object builded (format #f "~a-~a" name-space op)))
-
-(define (connect-btn btn table . fields)
-  (connect btn (lambda (btn)
-		 (apply insert (cons table fields)))))
+(define (button-callback name-space name btn)
+  ;; (match name
+  ;;   ["add" (lambda (a)
+  ;; 	     (insert ))]
+  ;;   ["remove"]
+  ;;   ["edit"]
+  ;;   ["complete" ])
+  (lambda a (display (list name-space name btn)) (newline)))
+(define (get-entries name-space) name-space)
+(define (controls-forech proc builded)
+  (for-each (lambda (name-space)
+	      (for-each (lambda (name)
+			  (proc (list (car name-space) name (get-object builded (format #f "~a-~a" (car name-space) name)))))
+			'("add" "remove" "edit" "complete")))
+	    input-desc))
 
 (define (gtk-main app)
   (let* ([builded     (builder:new-from-string ui-xml-str (string-length ui-xml-str))]
@@ -41,6 +53,11 @@ exec guile -e main -s "$0" "$@"
 		       input-desc)]
 	 [grid-views (map (lambda (elm) (builder:get-object builded (string-append (car elm) "-" "grid-view")))
 			  input-desc)])
+    (controls-forech (lambda (btn) (display btn) (newline)
+			(match btn
+			  [(name-space name button)
+			   1]))
+		     builded)
     (stack-switcher:set-stack bs-switcher bs-stack)
     (window:set-application main-window app)
     (show main-window)

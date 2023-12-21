@@ -31,7 +31,7 @@
 				   (layout
 				    (property (@ (name "column")) 0)
 				    (property (@ (name "row"))    1))))
-		    (child (object (@ (class "GtkButton") (id ,(string-append prefix "-" "compelet")))
+		    (child (object (@ (class "GtkButton") (id ,(string-append prefix "-" "complete")))
 				   (property (@ (name "label")) "Complete")
 				   (layout
 				    (property (@ (name "column")) 1)
