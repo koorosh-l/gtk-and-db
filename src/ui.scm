@@ -1,15 +1,13 @@
 (define-module (ui)
   #:use-module (sxml simple)
   #:export (input-desc ui ui-xml-str))
-
 (define input-desc `(("books"		.("ISBN"        "title"       "writer"      "publisher"    "price"))
 		     ("customers"	.("customer-ID" "name"        "surname"     "phone-number" "dob"))
 		     ("sales"		.("recipt-id"   "customer-id" "books"       "total-price"  "date"))
 		     ("history"		.("recipt-id"   "all?"        "month"       "year"         "max-records"))))
-(define (gen-entry label id)
+(define (gen-entry id)
   `(object (@ (class "GtkEntry") (id ,id))
 	   (property (@ (name "placeholder-text")) ,id)))
-
 (define (gen-control-box prefix)
   `(object (@ (class "GtkFrame"))
 	   (child
@@ -45,17 +43,13 @@
 	    ,(append `(object (@ (class "GtkBox"))
 			      (property (@ (name "orientation")) "GTK_ORIENTATION_VERTICAL"))
 		     (map (lambda (label)
-			    `(child ,(gen-entry label (string-append prefix "-" label "-" "entry"))));;k;;;k;
+			    `(child ,(gen-entry (string-append prefix "-" label "-" "entry"))))
 			  entries)))))
 (define (gen-left prefix entries)
   `(object (@ (class "GtkBox"))
 	   (property (@ (name "orientation")) "GTK_ORIENTATION_VERTICAL")
 	   (child ,(gen-input-frame  prefix entries))
 	   (child ,(gen-control-box  prefix))))
-;; (define (gen-grid-view   id)
-;;   `(object (@ (class "GtkListView") (id ,id))
-;; 	   (property (@ (name "hexpand")) "TRUE")
-;; 	   (property (@ (name "vexpand")) "TRUE")))
 (define (gen-right prefix)
   `(object (@ (class "GtkFrame"))
 	   (child (@ (type "end"))
@@ -91,8 +85,10 @@
 	      (child (object (@ (class "GtkStackSwitcher") (id "switchero"))))
 	      (child ,(append
 		       `(object (@ (class "GtkStack") (id "stacked")))
-		       (map (lambda (i) `(child ,(make-tab (string-capitalize (car i)) (car i) (make-page (car i))))) input-desc))))))))
+		       (map (lambda (i) `(child ,(make-tab (string-capitalize (car i)) (car i) (make-page (car i)))))
+			    input-desc))))))))
 (define ui-xml-str
   (call-with-output-string
     (lambda (p)
       (sxml->xml ui p))))
+
