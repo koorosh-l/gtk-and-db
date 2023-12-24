@@ -8,6 +8,17 @@ exec guile -e main -s "$0" "$@"
 	     (gi) (gi repository) (sqlite3)
 	     (sxml simple) (ice-9 pretty-print)
 	     (ice-9 match))
+(define (memoize f)
+  (let ([prv (list)]
+	[res (list)])
+    (lambda x
+      (define q (assoc x prv))
+      (cond
+       [q (display "HIT\n") (cdr q)]
+       [else (set! res (apply f x))
+	     (set! prv (cons (cons x res) prv))
+	     res]))))
+(define-syntax-rule (def-mem (name args ...) body ...) (define name (memoize (lambda (args ...) body ...))))
 (require "Gio" "2.0")
 (require "Gtk" "4.0")
 (load-by-name "Gio" "Application")
@@ -21,47 +32,44 @@ exec guile -e main -s "$0" "$@"
 (load-by-name "Gtk" "Entry")
 (load-by-name "Gtk" "StackSwitcher")
 (load-by-name "Gtk" "EntryBuffer")
+(load-by-name "Gtk" "Buildable")
 
-(define (get-control builded name-space op)
-  (builder:get-object builded (format #f "~a-~a" name-space op)))
-(define (button-callback name-space name btn)
-  ;; (match name
-  ;;   ["add" (lambda (a)
-  ;; 	     (insert ))]
-  ;;   ["remove"]
-  ;;   ["edit"]
-  ;;   ["complete" ])
-  (lambda a (display (list name-space name btn)) (newline)))
-(define (get-entries name-space) name-space)
-(define (controls-forech proc builded)
+(define ui-obj (make-parameter 'hello))
+(def-mem (get-control name-space op)
+  (builder:get-object (ui-obj) (format #f "~a-~a" name-space op)))
+(define (controls-forech proc)
   (for-each (lambda (name-space)
 	      (for-each (lambda (name)
-			  (proc (list (car name-space) name (get-object builded (format #f "~a-~a" (car name-space) name)))))
+			  (proc `(,(car name-space) ,name
+				  ,(get-control (car name-space) name))))
 			'("add" "remove" "edit" "complete")))
 	    input-desc))
+(def-mem (get-entry name-space name)
+  (builder:get-object (ui-obj) (format #f "~a-~a-entry" name-space name)))
+(define (entries-foreach proc)
+  (for-each (lambda (name-space)
+	      (for-each (lambda (name)
+			  (proc `(,(car name-space) ,name ,(get-entry (car name-space) name))))
+			(cdr name-space)))
+	    input-desc))
+(def-mem (get-text-from-entry entry)
+  (let* ([bfr (get-buffer entry)] [str (get-text bfr)])
+    (delete-text bfr 0 (string-length str))
+    str))
+(define (install-callbacks)
+  (controls-forech (lambda (ctrl)
+		     (display (get-entry "books" "ISBN")) (newline))))
 
 (define (gtk-main app)
   (let* ([builded     (builder:new-from-string ui-xml-str (string-length ui-xml-str))]
 	 [main-window (builder:get-object builded "main-window")]
 	 [bs-stack    (builder:get-object builded "stacked")]
-	 [bs-switcher (builder:get-object builded "switchero")]
-	 [inputs  (map (lambda (i)
-			 (map (lambda (j)
-				(define id (string-append (car i) "-" j "-" "entry"))
-				(cons id (builder:get-object builded id)))
-			      (assoc-ref input-desc (car i))))
-		       input-desc)]
-	 [grid-views (map (lambda (elm) (builder:get-object builded (string-append (car elm) "-" "grid-view")))
-			  input-desc)])
-    (controls-forech (lambda (btn) (display btn) (newline)
-			(match btn
-			  [(name-space name button)
-			   1]))
-		     builded)
+	 [bs-switcher (builder:get-object builded "switchero")])
+    (parameterize ([ui-obj builded])
+      (install-callbacks))
     (stack-switcher:set-stack bs-switcher bs-stack)
     (window:set-application main-window app)
-    (show main-window)
-    (connect  (get-control builded "books" "add") clicked  (lambda a (display a) (newline) (destroy main-window)))))
+    (show main-window)))
 (define (activate-call-back app)
   (gtk-main app)) 
 (define (main cmd)
