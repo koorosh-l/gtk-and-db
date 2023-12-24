@@ -1,7 +1,7 @@
 CREATE TABLE "books" (
        "ISBN"	   TEXT    NOT NULL UNIQUE,
        "ISBNhash"  INTEGER NOT NULL UNIQUE,
-       "title"	   INTEGER NOT NULL,
+       "title"	   TEXT    NOT NULL,
        "writer"	   TEXT    NOT NULL,
        "publisher" TEXT    NOT NULL,
        "price"	   REAL    NOT NULL,
@@ -9,10 +9,10 @@ CREATE TABLE "books" (
 );
 CREATE TABLE "customers" (
        "cs_id"      INTEGER NOT NULL UNIQUE,
-       "dob"        TEXT    NOT NULL,
+       "dob"        INTEGER NOT NULL,
        "fname"      TEXT    NOT NULL,
        "lname"      TEXT    NOT NULL,
-       "join_date"  TEXT    NOT NULL,
+       "join_date"  INTEGER NOT NULL,
        "phone_nmbr" TEXT    NOT NULL,
        primary key ("cs_id")
 );
