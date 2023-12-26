@@ -9,11 +9,11 @@ CREATE TABLE "books" (
 );
 CREATE TABLE "customers" (
        "cs_id"      INTEGER NOT NULL UNIQUE,
-       "dob"        INTEGER NOT NULL,
        "fname"      TEXT    NOT NULL,
        "lname"      TEXT    NOT NULL,
-       "join_date"  INTEGER NOT NULL,
        "phone_nmbr" TEXT    NOT NULL,
+       "dob"        INTEGER NOT NULL,
+       "join_date"  INTEGER NOT NULL,
        primary key ("cs_id")
 );
 CREATE TABLE "sales" (
