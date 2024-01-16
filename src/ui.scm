@@ -3,7 +3,7 @@
   #:export (input-desc ui ui-xml-str))
 (define input-desc `(("books"		.("ISBN"        "ISBNHash" "title"       "writer"       "publisher" "price"))
 		     ("customers"	.("cs_id"       "name"     "surname"     "phone_number" "dob"       "join_date"))
-		     ("sales"		.("customer-id" "books"    "total-price" "date"))
+		     ("sales"		.("cs_id" "sale_id" "total_price"))
 		     ("history"		.("all?"        "month"    "year"        "max-records"))))
 (define (gen-entry name-space name)
   `(object (@ (class "GtkEntry") (id ,(string-append name-space "-" name "-entry")))

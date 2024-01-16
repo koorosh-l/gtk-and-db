@@ -25,11 +25,12 @@
 						    ,(&cmp nem? unq?) ,(&cmp nem? unq?)
 						    ,nem?))
 			       ("customers" .(later ,in?  ,nem?  ,nem? ,nem? ,in? ,in?))
-			       ("sales"     .(later ,nem? ,nem? ,rl? ,nem?))
+			       ("sales"     .(later ,in? ,in? ,in?))
 			       ("history"   .(later ,nem? ,nem? ,nem? ,in?))))
 (define-public type-mapping `(("books"	   .(,identity ,identity ,identity ,identity ,identity ,identity))
 			      ("customers" .(,identity ,identity ,identity ,identity ,identity ,identity))
-			      ("sales"	   .(,identity ,identity ,identity ,string->number ,identity))
+			      ("sales"	   .(,identity ,identity ,identity))
+			      ("sale_details" . (,identity ,identity ,identity ,identity))
 			      ("history"   .())))
 (define-public (type-check name-space args)
   (call/ec (lambda (esc)
@@ -55,7 +56,7 @@
    [(zero? (1- n)) "?"]
    [else (string-append (string #\? #\, #\space)
 			(make-params (1- n)))]))
-(define (insert t-name . args)
+(define (insert input-desc t-name . args)
   (call/ec (lambda (return)
 	     (when (not (type-check t-name args)) ((popup) "wrong args ~a" args) (return #f))
 	     (let*-log ([args (type-map t-name args)]
@@ -81,14 +82,17 @@
 	    (db:sqlite-finalize stmt))))
 (define (insert-book isbn title writer publisher price)
   (define (isbn-hash str) (hash str (inexact->exact 1e9)))
-  (insert "books" isbn (isbn-hash isbn) title writer publisher price))
+  (insert input-desc "books" isbn (isbn-hash isbn) title writer publisher price))
 (define (insert-customer cs-id name surname phone-number dob join-date)
-  (insert "customers" cs-id name surname phone-number dob join-date))
+  (insert input-desc "customers" cs-id name surname phone-number dob join-date))
 (define (insert-sales cs-id sale-id total-price)
-  (insert "sales" cs-id sale-id total-price))
-(define (insert-sale-dtls id sale-di isbn-h ) 1)
+  (insert input-desc "sales" cs-id sale-id total-price))
+(define (insert-sale-dtls id sale-id isbn-hash price)
+  (insert `(("sales_details" .("id" "sale_id" "ISBNhash" "price")))
+	  "sales_details" id sale-id isbn-hash price))
 (define-public (add name-space . args)
   (match name-space
-    ["books"     (apply insert-book args)]
-    ["customers" (apply insert-customer args)]
-    ["sales"     (apply insert-sales args)]))
+    ["books"         (apply insert-book args)]
+    ["customers"     (apply insert-customer args)]
+    ["sales"         (apply insert-sales args)]
+    ["sales_details" (apply insert-sale-dtls args)]))

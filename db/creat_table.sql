@@ -25,11 +25,11 @@ CREATE TABLE "sales" (
        FOREIGN KEY ("sale_id") REFERENCES customers("cs_id")
 );
 create table "sale_details"(
-       "id"      INTEGER NOT NULL UNIQUE,
-       "sale_id" INTEGER NOT NULL,
-       "ISBN"    INTEGER NOT NULL,
-       "price"   REAL    NOT NULL,
-       PRIMARY KEY ("ISBN","sale_id"),
+       "id"       INTEGER NOT NULL UNIQUE,
+       "sale_id"  INTEGER NOT NULL,
+       "ISBNhash" INTEGER NOT NULL,
+       "price"    REAL    NOT NULL,
+       PRIMARY KEY ("ISBNhash","sale_id"),
        FOREIGN KEY ("sale_id") REFERENCES sales("sale_id"),
        FOREIGN KEY ("ISBN")    REFERENCES books("ISBN")
 )
