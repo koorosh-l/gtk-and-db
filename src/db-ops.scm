@@ -24,11 +24,11 @@
 (define-public type-checking `(("books"	    .(later ,(&cmp nem? unq?) ,unq? ,unq?
 						    ,(&cmp nem? unq?) ,(&cmp nem? unq?)
 						    ,nem?))
-			       ("customers" .(later ,nem? ,nem? ,nem? ,nem? ,nem?))
+			       ("customers" .(later ,in?  ,nem?  ,nem? ,nem? ,in? ,in?))
 			       ("sales"     .(later ,nem? ,nem? ,rl? ,nem?))
 			       ("history"   .(later ,nem? ,nem? ,nem? ,in?))))
-(define-public type-mapping `(("books"	   .(,identity ,identity ,identity ,identity ,identity ,string->number))
-			      ("customers" .(,identity ,identity ,identity ,identity ,identity))
+(define-public type-mapping `(("books"	   .(,identity ,identity ,identity ,identity ,identity ,identity))
+			      ("customers" .(,identity ,identity ,identity ,identity ,identity ,identity))
 			      ("sales"	   .(,identity ,identity ,identity ,string->number ,identity))
 			      ("history"   .())))
 (define-public (type-check name-space args)
@@ -62,10 +62,10 @@
 			[fields       (assoc-ref input-desc t-name)]
 			[fileds-str   (string-append (fold (lambda (a b) (format #f "~a, ~a" a b))
 							   ""  (reverse (take fields (1- (length fields)))))
-						     (car (drop f (1- (length f)))))]
+						     (car (drop fields (1- (length fields)))))]
 			[param        (make-params (length fields))]
-			[ins-template (apply format `(#f "INSERT INTO ~a(~a) VALUES (~a);" ,t-name ,fileds-str ,param))])
-		       (define stmt         (db:sqlite-prepare db ins-template #:cache? #t))
+			[ins-template (apply format `(#f "INSERT INTO ~a(~a) VALUES (~a);" ,t-name ,fileds-str ,param))]
+			[stmt (db:sqlite-prepare db ins-template)])
 		       (for-each (lambda (key value) (db:sqlite-bind stmt key value)) (iota (length args) 1) args)
 		       (db:sqlite-step stmt)
 		       (db:sqlite-finalize stmt)))))
@@ -82,8 +82,8 @@
 (define (insert-book isbn title writer publisher price)
   (define (isbn-hash str) (hash str (inexact->exact 1e9)))
   (insert "books" isbn (isbn-hash isbn) title writer publisher price))
-(define (insert-customer cs-id dob fname lname join-date phone-number)
-  (insert "customers" cs-id dob fname lname join-date))
+(define (insert-customer cs-id name surname phone-number dob join-date)
+  (insert "customers" cs-id name surname phone-number dob join-date))
 (define (insert-sales cs-id sale-id total-price)
   (insert "sales" cs-id sale-id total-price))
 (define (insert-sale-dtls id sale-di isbn-h ) 1)

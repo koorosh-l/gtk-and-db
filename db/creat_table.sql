@@ -8,10 +8,10 @@ CREATE TABLE "books" (
        PRIMARY KEY("ISBNhash","ISBN")
 );
 CREATE TABLE "customers" (
-       "cs_id"      INTEGER NOT NULL UNIQUE,
-       "fname"      TEXT    NOT NULL,
-       "lname"      TEXT    NOT NULL,
-       "phone_nmbr" TEXT    NOT NULL,
+       "cs_id"        INTEGER NOT NULL UNIQUE,
+       "name"         TEXT    NOT NULL,
+       "surname"      TEXT    NOT NULL,
+       "phone_number" TEXT    NOT NULL,
        "dob"        INTEGER NOT NULL,
        "join_date"  INTEGER NOT NULL,
        primary key ("cs_id")
