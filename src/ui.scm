@@ -1,7 +1,7 @@
 (define-module (ui)
   #:use-module (sxml simple)
   #:export (input-desc ui ui-xml-str))
-(define input-desc `(("books"		.("ISBN"        "title"       "writer"      "publisher" "price"))
+(define input-desc `(("books"		.("ISBN"        "ISBNHash"    "title"        "writer"   "publisher" "price"))
 		     ("customers"	.("name"        "surname"     "phone-number" "dob"      "join-date"))
 		     ("sales"		.("customer-id" "books"       "total-price"  "date"))
 		     ("history"		.("all?"        "month"       "year"         "max-records"))))
@@ -91,4 +91,3 @@
   (call-with-output-string
     (lambda (p)
       (sxml->xml ui p))))
-

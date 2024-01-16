@@ -1,15 +1,46 @@
 (define-module (db-ops)
+  #:use-module (utils)
   #:use-module (ui)
   #:use-module (srfi srfi-1)
   #:use-module ((sqlite3) #:prefix db:)
   #:use-module (ice-9 textual-ports)
-  #:use-module (ice-9 match))
-(define-public (isbn-hash str) (hash str (inexact->exact 1e9)))
-(define-syntax-rule (do-times count body ...)
-  (let loop ([i count] [res (begin body ...)])
-    (cond
-     [(= i 1) res]
-     [else (loop (1- i) (begin body ...))])))
+  #:use-module (ice-9 match)
+  #:use-module (ice-9 pretty-print)
+  #:use-module (ice-9 control))
+;;str -> check -> map -> insert
+;;                    -> alert pop up
+;; all the errors are emited in the checking step
+(define popup (lambda a (display a) (newline))
+					;(make-parameter (lambda a (apply format (append (current-output-port) a))))
+  )
+(define-syntax-rule (&cmp func func* ...)
+  (lambda (arg) (and (func arg) (func* arg) ...)))
+(define (nem? str) (> (string-length str) 0))
+(define (unq? str) #t)
+(define (rl? n) (and (real? n) (positive? n)))
+(define (in? n) (exact? n) (positive? n))
+(define prk? (&cmp in? unq?))
+(define (string->unix-time) 0)
+(define-public type-checking `(("books"	    .(later ,(&cmp nem? unq?) ,unq? ,unq?
+						    ,(&cmp nem? unq?) ,(&cmp nem? unq?)
+						    ,nem?))
+			       ("customers" .(later ,nem? ,nem? ,nem? ,nem? ,nem?))
+			       ("sales"     .(later ,nem? ,nem? ,rl? ,nem?))
+			       ("history"   .(later ,nem? ,nem? ,nem? ,in?))))
+(define-public type-mapping `(("books"	   .(,identity ,identity ,identity ,identity ,identity ,string->number))
+			      ("customers" .(,identity ,identity ,identity ,identity ,identity))
+			      ("sales"	   .(,identity ,identity ,identity ,string->number ,identity))
+			      ("history"   .())))
+(define-public (type-check name-space args)
+  (call/ec (lambda (esc)
+	     (for-each (lambda (pred input) (when (not (pred input)) input) #t)
+		       (cdr (assoc-ref  type-checking name-space))
+		       args))))
+(define-public (type-map name-space args)
+  (map (lambda (-> arg) (-> arg))
+       (assoc-ref type-mapping name-space)
+       args))
+
 (define-public db-name "../db/bs.db3")
 (define-public create-sql "../db/creat_table.sql")
 (define-public flags   (logior db:SQLITE_OPEN_CREATE))
@@ -17,20 +48,28 @@
   (cond
    [(file-exists? db-name) (db:sqlite-open db-name)]
    [else (let ([db (db:sqlite-open db-name)]) (db:sqlite-exec db (call-with-input-file create-sql get-string-all)))]))
-(define-public db (gen/open-db))
-(define-public (insert t-name . args)
-  (let* ([fields       (assoc-ref input-desc t-name)]
-	 [fileds-str   (string-append (fold (lambda (a b) (format #f "~a, ~a" a b))
-					    "" (cdr fields)) (car (reverse fields)))]
-	 [param        (string-append (string-append (fold (lambda (a b) (format #f "?, ~a" b)) "" (cdr fields))) "?")]
-	 [ins-template (apply format `(#f "INSERT INTO ~a(~a) VALUE (~a);" ,t-name ,fileds-str ,param))]
-	 [stmt '()])
-    (apply pretty-print (list fields fileds-str param ins-template stmt))
-    (define stmt         (db:sqlite-prepare db ins-template #:cache? #t))
-    (for-each (lambda (key value) (db:sqlite-bind stmt key value)) (iota (length args)) args)
-    (db:sqlite-step stmt)
-    (db:sqlite-finalize stmt)))
-(define-public (select t-name count . args)
+(define db (gen/open-db))
+(define (close-db) (db:sqlite-close db))
+(define (make-params n)
+  (cond
+   [(zero? (1- n)) "?"]
+   [else (string-append (string #\? #\, #\space)
+			(make-params (1- n)))]))
+(define (insert t-name . args)
+  (call/ec (lambda (return)
+	     (when (not (type-check t-name args)) ((popup) "wrong args ~a" args) (return #f))
+	     (let*-log ([args (type-map t-name args)]
+			[fields       (assoc-ref input-desc t-name)]
+			[fileds-str   (string-append (fold (lambda (a b) (format #f "~a, ~a" a b))
+							   ""  (reverse (take fields (1- (length fields)))))
+						     (car (drop f (1- (length f)))))]
+			[param        (make-params (length fields))]
+			[ins-template (apply format `(#f "INSERT INTO ~a(~a) VALUES (~a);" ,t-name ,fileds-str ,param))])
+		       (define stmt         (db:sqlite-prepare db ins-template #:cache? #t))
+		       (for-each (lambda (key value) (db:sqlite-bind stmt key value)) (iota (length args) 1) args)
+		       (db:sqlite-step stmt)
+		       (db:sqlite-finalize stmt)))))
+(define (select t-name count . args)
   (let* ([fields          (assoc-ref input-desc t-name)]
 	 [param           (string-append (string-append (fold (lambda (a b) (format #f "?, ~a" b)) "" (cdr fields))) "?")]
 	 [select-template (apply format `(#f "SELECT ~a FROM ~a;" ,param ,t-name ))]
@@ -40,10 +79,16 @@
 			      (cons a b))
 			    '() stmt)
 	    (db:sqlite-finalize stmt))))
-(define-public (insert-book isbn title writer publisher price)
-  (insert "books" isbn (isbn-hash isnb) writer publisher price))
-(define-public (insert-customer cs-id dob fname lanem join-date phone-number)
-  (insert "customers" cs-id dob fname lanme join-date))
-(define-public (insert-sales cs-id sale-id total-price)
+(define (insert-book isbn title writer publisher price)
+  (define (isbn-hash str) (hash str (inexact->exact 1e9)))
+  (insert "books" isbn (isbn-hash isbn) title writer publisher price))
+(define (insert-customer cs-id dob fname lname join-date phone-number)
+  (insert "customers" cs-id dob fname lname join-date))
+(define (insert-sales cs-id sale-id total-price)
   (insert "sales" cs-id sale-id total-price))
-(define-public (insert-sale-dtls id sale-di isbn-h ) 1)
+(define (insert-sale-dtls id sale-di isbn-h ) 1)
+(define-public (add name-space . args)
+  (match name-space
+    ["books"     (apply insert-book args)]
+    ["customers" (apply insert-customer args)]
+    ["sales"     (apply insert-sales args)]))

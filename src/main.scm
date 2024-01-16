@@ -1,13 +1,14 @@
 #! /bin/sh
 # -*- mode: scheme; coding: utf-8 -*-
-exec guile -e main -s "$0" "$@" 
+exec guile -e main -s "$0" "$@"
 !#
 
 (add-to-load-path (getenv "PWD"))
 (use-modules (ui) (db-ops)
-	     (gi) (gi repository) (sqlite3)
-	     (sxml simple) (ice-9 pretty-print)
-	     (ice-9 match))
+	     (gi) (gi repository)
+	     (sqlite3)
+	     (sxml simple)
+	     (ice-9 pretty-print) (ice-9 match))
 (define (memoize f)
   (let ([prv (list)]
 	[res (list)])
@@ -56,22 +57,21 @@ exec guile -e main -s "$0" "$@"
   (let* ([bfr (get-buffer entry)] [str (get-text bfr)])
     (delete-text bfr 0 (string-length str))
     str))
-(define (install-callbacks)
-  (controls-forech (lambda (ctrl)
-		     (display (get-entry "books" "ISBN")) (newline))))
+(define (install-add name-space)
+  1)
 
 (define (gtk-main app)
-  (let* ([builded     (builder:new-from-string ui-xml-str (string-length ui-xml-str))]
+  (let* ([builded     (builder:new-from-string (@ (ui) ui-xml-str) (string-length ui-xml-str))]
 	 [main-window (builder:get-object builded "main-window")]
 	 [bs-stack    (builder:get-object builded "stacked")]
 	 [bs-switcher (builder:get-object builded "switchero")])
     (parameterize ([ui-obj builded])
-      (install-callbacks))
+      (install-add "books"))
     (stack-switcher:set-stack bs-switcher bs-stack)
     (window:set-application main-window app)
     (show main-window)))
 (define (activate-call-back app)
-  (gtk-main app)) 
+  (gtk-main app))
 (define (main cmd)
   (let ([app (make <GtkApplication> #:application-id "xyz.quasikote.www")])
     (connect app activate activate-call-back)
