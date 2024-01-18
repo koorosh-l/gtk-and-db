@@ -21,12 +21,13 @@
 (define (in? n) (exact? n) (positive? n))
 (define prk? (&cmp in? unq?))
 (define (string->unix-time) 0)
-(define-public type-checking `(("books"	    .(later ,(&cmp nem? unq?) ,unq? ,unq?
-						    ,(&cmp nem? unq?) ,(&cmp nem? unq?)
-						    ,nem?))
-			       ("customers" .(later ,in?  ,nem?  ,nem? ,nem? ,in? ,in?))
-			       ("sales"     .(later ,in? ,in? ,in?))
-			       ("history"   .(later ,nem? ,nem? ,nem? ,in?))))
+(define-public type-checking `(("books"	      .(later ,(&cmp nem? unq?) ,unq? ,unq?
+						     ,(&cmp nem? unq?) ,(&cmp nem? unq?)
+						     ,nem?))
+			       ("customers"   .(later ,in?  ,nem?  ,nem? ,nem? ,in? ,in?))
+			       ("sales"       .(later ,in? ,in? ,in?))
+			       ("history"     .(later ,nem? ,nem? ,nem? ,in?))
+			       ("sale_details" . (later ,unq? ,unq? ,unq? ,unq?))))
 (define-public type-mapping `(("books"	   .(,identity ,identity ,identity ,identity ,identity ,identity))
 			      ("customers" .(,identity ,identity ,identity ,identity ,identity ,identity))
 			      ("sales"	   .(,identity ,identity ,identity))
@@ -88,7 +89,7 @@
 (define (insert-sales cs-id sale-id total-price)
   (insert input-desc "sales" cs-id sale-id total-price))
 (define (insert-sale-dtls id sale-id isbn-hash price)
-  (insert `(("sales_details" .("id" "sale_id" "ISBNhash" "price")))
+  (insert `(("sale_details" .("id" "sale_id" "ISBNhash" "price")))
 	  "sales_details" id sale-id isbn-hash price))
 (define-public (add name-space . args)
   (match name-space

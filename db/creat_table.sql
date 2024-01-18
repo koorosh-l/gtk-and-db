@@ -31,5 +31,5 @@ create table "sale_details"(
        "price"    REAL    NOT NULL,
        PRIMARY KEY ("ISBNhash","sale_id"),
        FOREIGN KEY ("sale_id") REFERENCES sales("sale_id"),
-       FOREIGN KEY ("ISBN")    REFERENCES books("ISBN")
+       FOREIGN KEY ("ISBNhash")    REFERENCES books("ISBNhash")
 )
