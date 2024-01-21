@@ -1,0 +1,42 @@
+(define-module (book-store)
+  #:use-module (ui)
+  #:use-module (db-ops)
+  #:use-module (ice-9 control)
+  #:use-module (ice-9 match))
+;;everything except the *ids are recvied as strings
+;;checks are done here db-ops doesn't implement any polcies
+(define-syntax-rule (&cmp func func* ...)
+  (lambda (arg) (and (func arg) (func* arg) ...)))
+(define (nem? str) (> (string-length str) 0))
+(define (unq? str) #t)
+(define (rl? n) (and (real? n) (positive? n)))
+(define (in? n) (exact? n) (positive? n))
+(define prk? (&cmp in? unq?))
+(define (string->unix-time) 0)
+(define type-checking `(("books"	      .(later ,(&cmp nem? unq?) ,unq? ,unq?
+						      ,(&cmp nem? unq?) ,(&cmp nem? unq?)
+						      ,nem?))
+			       ("customers"   .(later ,in?  ,nem?  ,nem? ,nem? ,in? ,in?))
+			       ("sales"       .(later ,in? ,in? ,in?))
+			       ("history"     .(later ,nem? ,nem? ,nem? ,in?))
+			       ("sale_details" . (later ,unq? ,unq? ,unq? ,unq?))))
+(define type-mapping `(("books"	   .(,identity ,identity ,identity ,identity ,identity ,identity))
+			      ("customers" .(,identity ,identity ,identity ,identity ,identity ,identity))
+			      ("sales"	   .(,identity ,identity ,identity))
+			      ("sale_details" . (,identity ,identity ,identity ,identity))
+			      ("history"   .())))
+(define (type-check name-space args)
+  (call/ec (lambda (esc)
+	     (for-each (lambda (pred input) (when (not (pred input)) input) #t)
+		       (cdr (assoc-ref  type-checking name-space))
+		       args))))
+(define (type-map name-space args)
+  (map (lambda (-> arg) (-> arg))
+       (assoc-ref type-mapping name-space)
+       args))
+(define-public (add name-space . args)
+  (match name-space
+    ["books"         (apply insert-book args)]
+    ["customers"     (apply insert-customer args)]
+    ["sales"         (apply insert-sales args)]
+    ["sales_details" (apply insert-sale-dtls args)]))
