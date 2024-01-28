@@ -20,6 +20,7 @@ CREATE TABLE "sales" (
        "sale_id"     INTEGER NOT NULL UNIQUE,
        "cs_id"       INTEGER NOT NULL,
        "total_price" INTEGER NOT NULL,
+       "date"        INTEGER NOT NULL,
        PRIMARY KEY ("sale_id"),
        FOREIGN KEY ("cs_id")   REFERENCES customers("cs_id"),
        FOREIGN KEY ("sale_id") REFERENCES customers("cs_id")
@@ -29,7 +30,7 @@ CREATE TABLE "sale_details"(
        "sale_id"  INTEGER NOT NULL,
        "ISBNhash" INTEGER NOT NULL,
        "price"    REAL    NOT NULL,
-       PRIMARY KEY ("ISBNhash","sale_id"),
+       PRIMARY KEY ("ISBNhash","id"),
        FOREIGN KEY ("sale_id")  REFERENCES sales("sale_id"),
        FOREIGN KEY ("ISBNhash") REFERENCES books("ISBNhash")
 );
