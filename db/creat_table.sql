@@ -12,24 +12,24 @@ CREATE TABLE "customers" (
        "name"         TEXT    NOT NULL,
        "surname"      TEXT    NOT NULL,
        "phone_number" TEXT    NOT NULL,
-       "dob"        INTEGER NOT NULL,
-       "join_date"  INTEGER NOT NULL,
+       "dob"          INTEGER NOT NULL,
+       "join_date"    INTEGER NOT NULL,
        primary key ("cs_id")
 );
 CREATE TABLE "sales" (
-       "cs_id"       INTEGER NOT NULL,
        "sale_id"     INTEGER NOT NULL UNIQUE,
+       "cs_id"       INTEGER NOT NULL,
        "total_price" INTEGER NOT NULL,
        PRIMARY KEY ("sale_id"),
        FOREIGN KEY ("cs_id")   REFERENCES customers("cs_id"),
        FOREIGN KEY ("sale_id") REFERENCES customers("cs_id")
 );
-create table "sale_details"(
+CREATE TABLE "sale_details"(
        "id"       INTEGER NOT NULL UNIQUE,
        "sale_id"  INTEGER NOT NULL,
        "ISBNhash" INTEGER NOT NULL,
        "price"    REAL    NOT NULL,
        PRIMARY KEY ("ISBNhash","sale_id"),
-       FOREIGN KEY ("sale_id") REFERENCES sales("sale_id"),
-       FOREIGN KEY ("ISBNhash")    REFERENCES books("ISBNhash")
-)
+       FOREIGN KEY ("sale_id")  REFERENCES sales("sale_id"),
+       FOREIGN KEY ("ISBNhash") REFERENCES books("ISBNhash")
+);
