@@ -1,6 +1,6 @@
 (define-module (utils)
-  #:export (lognret do-times let*-log)
-  )
+  #:export (lognret do-times let*-log))
+
 (define-syntax-rule (do-times count body ...)
   (let loop ([i count] [res (begin body ...)])
     (cond

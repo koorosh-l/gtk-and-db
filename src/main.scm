@@ -9,16 +9,25 @@ exec guile -e main -s "$0" "$@"
 	     (sqlite3)
 	     (sxml simple)
 	     (ice-9 pretty-print) (ice-9 match))
-(define (memoize f)
-  (let ([prv (list)]
-	[res (list)])
-    (lambda x
-      (define q (assoc x prv))
+
+(define-public (memoize f)
+  (let ([table (make-hash-table (inexact->exact 1e6))]
+	[res #f])
+    (lambda arg
       (cond
-       [q (display "HIT\n") (cdr q)]
-       [else (set! res (apply f x))
-	     (set! prv (cons (cons x res) prv))
-	     res]))))
+       [(hash-get-handle table arg) => cdr]
+       [else (hash-set! table arg (apply f arg))
+	     (cdr (hash-get-handle table arg))]))))
+;; (define (memoize f)
+;;   (let ([prv (list)]
+;; 	[res (list)])
+;;     (lambda x
+;;       (define q (assoc x prv))
+;;       (cond
+;;        [q (display "HIT\n") (cdr q)]
+;;        [else (set! res (apply f x))
+;; 	     (set! prv (cons (cons x res) prv))
+;; 	     res]))))
 (define-syntax-rule (def-mem (name args ...) body ...) (define name (memoize (lambda (args ...) body ...))))
 (require "Gio" "2.0")
 (require "Gtk" "4.0")
@@ -75,5 +84,4 @@ exec guile -e main -s "$0" "$@"
 (define (main cmd)
   (let ([app (make <GtkApplication> #:application-id "xyz.quasikote.www")])
     (connect app activate activate-call-back)
-    (run app )))
-(exit (main (command-line)))
+    (run app)))
