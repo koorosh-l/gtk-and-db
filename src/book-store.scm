@@ -2,6 +2,7 @@
   #:use-module (ui)
   #:use-module (db-ops)
   #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-19)
   #:use-module (ice-9 match)
   #:use-module (ice-9 control)
   #:use-module (ice-9 pretty-print))

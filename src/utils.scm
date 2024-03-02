@@ -14,7 +14,6 @@
 		      (newline (current-error-port)) val)]))
 (define-syntax let*-log
   (syntax-rules ()
-    [(_ ([n* v*] ...)
-	body ...)
-     (let* ([n* (lognret v*)] ...)
-       body ...)]))
+    [(_ ([n* v*] ...) body ...)
+     (let* ([n* (begin (display 'n*) (display ": ") (lognret v*))] ...)
+	    body ...)]))

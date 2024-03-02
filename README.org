@@ -1,6 +1,5 @@
 * bookstore
 management program for a bookstore using sqlite3, Gtk and guile-gi
-
 * running
 #+begin_src shell
   guix shell --max-jobs=24 --verbosity=9  --manifest=./manifest.scm  --development
@@ -12,5 +11,27 @@ management program for a bookstore using sqlite3, Gtk and guile-gi
 for some reason calling gtk imported fucntions in the server fails with a byebye
 
 * tbi
-remove the use of an xml file for ui description and go all strings 
-use some quasiqoutes to remove duplicate code and definitions 
+- [ ] implement delete in db-ops
+- [ ] implement exclusion for generation
+- [ ] write make_sale search and streamify
+
+* debug
+** db-ops
+- [X] inserts [4/4]
+  - [X] books
+  - [X] customers
+  - [X] sales
+  - [X] sale_details
+- [X] selects [4/4]
+  - [X] books
+  - [X] customers
+  - [X] sales
+  - [X] sale_details
+- [ ] deletes [0/4]
+  - [ ] books
+  - [ ] customers
+  - [ ] sales
+  - [ ] sale_details
+** book-store
+** ui
+** main

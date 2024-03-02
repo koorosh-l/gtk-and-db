@@ -1,10 +1,15 @@
 (define-module (ui)
   #:use-module (sxml simple)
   #:export (input-desc ui ui-xml-str))
-(define input-desc `(("books"		.("ISBN"        "ISBNHash" "title"       "writer"       "publisher" "price"))
-		     ("customers"	.("cs_id"       "name"     "surname"     "phone_number" "dob"       "join_date"))
-		     ("sales"		.("cs_id" "sale_id" "total_price"))
-		     ("history"		.("all?"        "month"    "year"        "max-records"))))
+(define input-desc
+  `(("books"
+     .("ISBN" "ISBNHash" "title" "writer" "publisher" "price"))
+    ("customers"
+     .("cs_id" "name" "surname" "phone_number" "dob" "join_date"))
+    ("sales"
+     .("cs_id" "sale_id" "total_price" "date"))
+    ("history"
+     .("all?" "month" "year" "max-records"))))
 (define (gen-entry name-space name)
   `(object (@ (class "GtkEntry") (id ,(string-append name-space "-" name "-entry")))
 	   (property (@ (name "placeholder-text")) ,name)))
@@ -71,6 +76,8 @@
 	   (property (@ (name "title")) ,title)
 	   (property (@ (name "child")) ,child)))
 
+(define (exclude sym l) (filter (lambda (a) (equal? a sym)) l))
+
 (define ui
   `(interface
     (@ (domain "xyz.quasikote"))
@@ -87,6 +94,7 @@
 		       `(object (@ (class "GtkStack") (id "stacked")))
 		       (map (lambda (i) `(child ,(make-tab (string-capitalize (car i)) (car i) (make-page (car i)))))
 			    input-desc))))))))
+
 (define ui-xml-str
   (call-with-output-string
     (lambda (p)
