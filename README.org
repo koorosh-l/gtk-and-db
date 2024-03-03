@@ -11,7 +11,7 @@ management program for a bookstore using sqlite3, Gtk and guile-gi
 for some reason calling gtk imported fucntions in the server fails with a byebye
 
 * tbi
-- [ ] implement delete in db-ops
+- [X] implement delete in db-ops
 - [ ] implement exclusion for generation
 - [ ] write make_sale search and streamify
 
@@ -27,11 +27,11 @@ for some reason calling gtk imported fucntions in the server fails with a byebye
   - [X] customers
   - [X] sales
   - [X] sale_details
-- [ ] deletes [0/4]
-  - [ ] books
-  - [ ] customers
-  - [ ] sales
-  - [ ] sale_details
+- [X] deletes [4/4]
+  - [X] books
+  - [X] customers
+  - [X] sales
+  - [X] sale_details
 ** book-store
 ** ui
 ** main

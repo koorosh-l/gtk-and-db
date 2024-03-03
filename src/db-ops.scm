@@ -32,7 +32,8 @@
 					    ""  (reverse (take fields (1- (length fields)))))
 				      (car (drop fields (1- (length fields)))))]
 	 [param        (make-params (length fields))]
-	 [ins-template (apply format `(#f "INSERT INTO ~a(~a) VALUES (~a);" ,t-name ,fileds-str ,param))]
+	 [ins-template (apply format `(#f "INSERT INTO ~a(~a) VALUES (~a);"
+					  ,t-name ,fileds-str ,param))]
 	 [stmt (db:sqlite-prepare db ins-template)])
     (for-each (lambda (key value) (db:sqlite-bind stmt key value)) (iota (length args) 1) args)
     (db:sqlite-step stmt)
@@ -48,7 +49,17 @@
     (db:sqlite-finalize stmt)
     res))
 
-(define-public (select-next-gen t-name . args)  ;;manually finalize
+(define-public (gen-delete t-name cl)
+  (let*-log ([delete-template (apply format `(#f "DELETE FROM \"~a\" WHERE \"~a\" = ?"
+						 ,t-name ,cl))]
+	     [stmt            (db:sqlite-prepare db delete-template)])
+	    (case-lambda
+	      [() (db:sqlite-finalize stmt)]
+	      [(value)
+	       (db:sqlite-bind stmt 1 value)
+	       (db:sqlite-step stmt)])))
+
+(define-public (gen-select t-name . args) ;;manually finalize
   (let*-log ([fields          args]
 	     [param           (make-params (length args))]
 	     [select-template (apply format `(#f "SELECT ~a FROM \"~a\";"
